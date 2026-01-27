@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 // Configuration
-const API_URL = 'http://10.0.0.252:5678/webhook/dbc-new-chat';
+const API_URL = 'http://10.0.0.252:6060/DBC/new-chat';
 const STAFF_ID = '1001'; // Mock Staff ID
 
 // Function สร้าง Session ใหม่
@@ -23,7 +23,7 @@ export const createChatSession = async (sessionName: string) => {
 // ดึงประวัติ session จาก n8n
 export const fetchSession = async (staffId?: string) => {
   try {
-    const response = await axios.get('http://10.0.0.252:5678/webhook/dbc-fetch-session', {
+    const response = await axios.get('http://10.0.0.252:6060/DBC/sessions', {
       params: { staff_id: staffId || STAFF_ID }
     });
     return response.data;
@@ -36,7 +36,7 @@ export const fetchSession = async (staffId?: string) => {
 // เปลี่ยนชื่อ session ผ่าน n8n
 export const renameChatSession = async (id: string, sessionName: string) => {
   try {
-    const response = await axios.post('http://10.0.0.252:5678/webhook/dbc-rename', {
+    const response = await axios.post('http://10.0.0.252:6060/DBC/rename', {
       id,
       session_name: sessionName
     });
@@ -50,7 +50,7 @@ export const renameChatSession = async (id: string, sessionName: string) => {
 // ลบ session ผ่าน n8n
 export const deleteChatSession = async (id: string) => {
   try {
-    const response = await axios.post('http://10.0.0.252:5678/webhook/dbc-delete-session', {
+    const response = await axios.post('http://10.0.0.252:6060/DBC/delete-session/{id}', {
       id
     });
     return response.data;
@@ -63,7 +63,7 @@ export const deleteChatSession = async (id: string) => {
 // ดึงประวัติการสนทนาของ session (ส่ง session_id)
 export const fetchChatHistory = async (sessionId: string) => {
   try {
-    const response = await axios.get('http://10.0.0.252:5678/webhook/dbc-chat-history', {
+    const response = await axios.get('http://10.0.0.252:6060/DBC/chat-history/{session_id}', {
       params: { session_id: sessionId }
     });
     return response.data;
@@ -78,7 +78,7 @@ export const fetchChatHistory = async (sessionId: string) => {
 // ส่งข้อความไปถาม AI (session + message)
 export const sendMessageToAI = async (sessionId: string, message: string) => {
   try {
-    const response = await axios.post('http://10.0.0.252:5678/webhook/dbc-ai', {
+    const response = await axios.post('http://10.0.0.252:6060/DBC/send-message', {
       session_id: sessionId,
       message
     });
@@ -94,7 +94,7 @@ export type SatisfactionKind = 'LIKE' | 'DISLIKE';
 
 export const submitSatisfaction = async (messageId: string | number, satisfaction: SatisfactionKind, satisfactionReason?: string) => {
   try {
-    const response = await axios.post('http://10.0.0.252:5678/webhook/dbc-satisfaction', {
+    const response = await axios.post('http://10.0.0.252:6060/DBC/satisfaction', {
       message_id: messageId,
       satisfaction,
       satisfaction_reason: satisfactionReason || null

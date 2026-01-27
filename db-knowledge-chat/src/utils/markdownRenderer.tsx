@@ -1,5 +1,3 @@
-import React from 'react';
-
 export const renderContent = (content: string) => {
   // แยกส่วน Code Block (```...```) ออกจากข้อความปกติ
   const parts = content.split(/(```[\s\S]*?```)/g);

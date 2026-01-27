@@ -1,4 +1,4 @@
-import { useRoutes, Navigate } from 'react-router-dom';
+import { useRoutes } from 'react-router-dom';
 import DBCChat from '../pages/chat/DBCChat';
 import { PATHS } from './paths';
 

@@ -1,5 +1,5 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { Database, MessageSquare, Edit2, Trash2, Check, Plus, RefreshCw } from 'lucide-react';
+import { useState, useRef, useEffect, type MouseEvent } from 'react';
+import { Database, MessageSquare, Edit2, Trash2, Check, Plus } from 'lucide-react';
 import type { Session } from '../types/chat';
 
 interface SidebarProps {
@@ -30,7 +30,7 @@ export default function Sidebar({
     }
   }, [editingSessionId]);
 
-  const startEditing = (e: React.MouseEvent, session: Session) => {
+  const startEditing = (e: MouseEvent, session: Session) => {
     e.stopPropagation();
     setEditingSessionId(session.id);
     setEditNameValue(session.title);
@@ -95,15 +95,15 @@ export default function Sidebar({
             {/* Action Buttons */}
             {!editingSessionId && (
               <div className={`flex items-center gap-1 ${session.id === currentSessionId ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'} transition-opacity`}>
-                 <button 
+                  <button 
                     onClick={(e) => startEditing(e, session)}
                     className="p-1 text-slate-400 hover:text-blue-600 hover:bg-white rounded"
                     title="แก้ไขชื่อ"
                  >
                    <Edit2 size={12} />
                  </button>
-                 <button 
-                    onClick={(e) => onDeleteSession(session.id)}
+                  <button 
+                    onClick={() => onDeleteSession(session.id)}
                     className="p-1 text-slate-400 hover:text-red-600 hover:bg-white rounded"
                     title="ลบแชท"
                  >
