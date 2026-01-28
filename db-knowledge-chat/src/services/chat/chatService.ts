@@ -50,7 +50,7 @@ export const renameChatSession = async (id: string, sessionName: string) => {
 // ลบ session ผ่าน n8n
 export const deleteChatSession = async (id: string) => {
   try {
-    const response = await axios.post('http://10.0.0.252:6060/DBC/delete-session/{id}', {
+    const response = await axios.post('http://10.0.0.252:6060/DBC/delete-session', {
       id
     });
     return response.data;
@@ -63,7 +63,7 @@ export const deleteChatSession = async (id: string) => {
 // ดึงประวัติการสนทนาของ session (ส่ง session_id)
 export const fetchChatHistory = async (sessionId: string) => {
   try {
-    const response = await axios.get('http://10.0.0.252:6060/DBC/chat-history/{session_id}', {
+    const response = await axios.get('http://10.0.0.252:6060/DBC/chat-history', {
       params: { session_id: sessionId }
     });
     return response.data;
