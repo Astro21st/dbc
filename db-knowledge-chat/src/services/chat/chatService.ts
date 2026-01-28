@@ -1,18 +1,17 @@
 import axios from 'axios';
 
 // Configuration
-const API_URL = 'http://10.0.0.252:6060/DBC/new-chat';
-const STAFF_ID = '1001'; // Mock Staff ID
+// สังเกต: ผมตัด path ย่อยออกเพื่อให้ต่อ string ได้ยืดหยุ่นขึ้น
+const API_BASE_URL = 'http://10.0.0.252:6060/DBC'; 
+const STAFF_ID = '1001'; 
 
-// Function สร้าง Session ใหม่
+// 1. สร้าง Session ใหม่ (POST Body เหมือนเดิม เพราะข้อมูลเยอะไม่ใช่ Params)
 export const createChatSession = async (sessionName: string) => {
   try {
-    const response = await axios.post(API_URL, {
+    const response = await axios.post(`${API_BASE_URL}/new-chat`, {
       staff_id: STAFF_ID,
       session_name: sessionName
     });
-    
-    // Return data จาก n8n (คาดหวังว่าจะมี id หรือ session_id กลับมา)
     return response.data;
   } catch (error) {
     console.error('API Error:', error);
@@ -20,12 +19,13 @@ export const createChatSession = async (sessionName: string) => {
   }
 };
 
-// ดึงประวัติ session จาก n8n
+// 2. ดึงประวัติ session (GET)
+// เปลี่ยน: จาก Query String (?staff_id=...) เป็น Path Param (/sessions/1001)
 export const fetchSession = async (staffId?: string) => {
+  const targetStaffId = staffId || STAFF_ID;
   try {
-    const response = await axios.get('http://10.0.0.252:6060/DBC/sessions', {
-      params: { staff_id: staffId || STAFF_ID }
-    });
+    // ส่ง staff_id ไปกับ URL โดยตรง
+    const response = await axios.get(`${API_BASE_URL}/sessions/${targetStaffId}`);
     return response.data;
   } catch (error) {
     console.error('Fetch history API Error:', error);
@@ -33,11 +33,11 @@ export const fetchSession = async (staffId?: string) => {
   }
 };
 
-// เปลี่ยนชื่อ session ผ่าน n8n
+// 3. เปลี่ยนชื่อ session (POST)
+// เปลี่ยน: เอา ID ไปไว้ที่ URL เพื่อความชัดเจน (RESTful) ส่วนชื่อใหม่ไว้ใน Body
 export const renameChatSession = async (id: string, sessionName: string) => {
   try {
-    const response = await axios.post('http://10.0.0.252:6060/DBC/rename', {
-      id,
+    const response = await axios.post(`${API_BASE_URL}/rename/${id}`, {
       session_name: sessionName
     });
     return response.data;
@@ -47,12 +47,12 @@ export const renameChatSession = async (id: string, sessionName: string) => {
   }
 };
 
-// ลบ session ผ่าน n8n
+// 4. ลบ session (POST หรือ DELETE)
+// เปลี่ยน: ส่ง ID ไปกับ URL
 export const deleteChatSession = async (id: string) => {
   try {
-    const response = await axios.post('http://10.0.0.252:6060/DBC/delete-session', {
-      id
-    });
+    const response = await axios.post(`${API_BASE_URL}/delete-session/${id}`); 
+    // หรือถ้า Backend ใช้ method DELETE: await axios.delete(`${API_BASE_URL}/delete-session/${id}`);
     return response.data;
   } catch (error) {
     console.error('Delete session API Error:', error);
@@ -60,12 +60,11 @@ export const deleteChatSession = async (id: string) => {
   }
 };
 
-// ดึงประวัติการสนทนาของ session (ส่ง session_id)
+// 5. ดึงประวัติการสนทนา (GET)
+// เปลี่ยน: จาก Query String (?session_id=...) เป็น Path Param (/chat-history/xyz123)
 export const fetchChatHistory = async (sessionId: string) => {
   try {
-    const response = await axios.get('http://10.0.0.252:6060/DBC/chat-history', {
-      params: { session_id: sessionId }
-    });
+    const response = await axios.get(`${API_BASE_URL}/chat-history/${sessionId}`);
     return response.data;
   } catch (error) {
     console.error('Fetch chat history API Error:', error);
@@ -73,12 +72,11 @@ export const fetchChatHistory = async (sessionId: string) => {
   }
 };
 
-// อนาคตสามารถเพิ่ม function อื่นๆ ได้ เช่น sendChat, getHistory
-
-// ส่งข้อความไปถาม AI (session + message)
+// 6. ส่งข้อความ (POST Body เหมือนเดิม)
 export const sendMessageToAI = async (sessionId: string, message: string) => {
   try {
-    const response = await axios.post('http://10.0.0.252:6060/DBC/send-message', {
+    // มักจะส่ง sessionId ใน Body หรือ URL ก็ได้ แต่ Body สะดวกกว่าถ้า payload ใหญ่
+    const response = await axios.post(`${API_BASE_URL}/send-message`, {
       session_id: sessionId,
       message
     });
@@ -89,13 +87,12 @@ export const sendMessageToAI = async (sessionId: string, message: string) => {
   }
 };
 
-// ส่งผลการให้คะแนนความพึงพอใจของผู้ใช้สำหรับข้อความ
+// 7. ให้คะแนน (POST Body เหมือนเดิม)
 export type SatisfactionKind = 'LIKE' | 'DISLIKE';
 
 export const submitSatisfaction = async (messageId: string | number, satisfaction: SatisfactionKind, satisfactionReason?: string) => {
   try {
-    const response = await axios.post('http://10.0.0.252:6060/DBC/satisfaction', {
-      message_id: messageId,
+    const response = await axios.post(`${API_BASE_URL}/satisfaction/${messageId}`, {
       satisfaction,
       satisfaction_reason: satisfactionReason || null
     });
