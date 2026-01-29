@@ -3,7 +3,57 @@ import axios from 'axios';
 // Configuration
 // สังเกต: ผมตัด path ย่อยออกเพื่อให้ต่อ string ได้ยืดหยุ่นขึ้น
 const API_BASE_URL = 'http://10.0.0.252:6060/DBC'; 
-const STAFF_ID = '1001'; 
+let STAFF_ID = '1001'; // default mock Staff ID; can be updated from session token
+
+// Initialize from sessionStorage if available (so refresh preserves staff id)
+try {
+  if (typeof window !== 'undefined' && window.sessionStorage) {
+    const saved = window.sessionStorage.getItem('dbc_staffId');
+    if (saved) STAFF_ID = saved;
+  }
+} catch (e) {
+  // ignore storage access errors
+}
+
+// Set staff id (from external auth / session lookup) and persist to sessionStorage
+export const setStaffId = (id: string | number) => {
+  STAFF_ID = String(id);
+  try {
+    if (typeof window !== 'undefined' && window.sessionStorage) {
+      window.sessionStorage.setItem('dbc_staffId', String(id));
+    }
+  } catch (e) {
+    // ignore storage errors
+  }
+};
+
+export const getStoredStaffId = () => STAFF_ID;
+
+// Fetch staff info (staffId) from sessionId via BackOffice API
+export const fetchStaffFromSessionId = async (sessionId: string) => {
+  try {
+    const url = 'http://10.0.0.159/BackOffice/Permission/GetTokenFromSessionId';
+    const response = await axios.post(url, {
+      request: { sessionId }
+    }, {
+      headers: {
+        'Content-Type': 'application/json',
+        accept: 'text/plain'
+      }
+    });
+
+    const data = response.data;
+    const staffId = data?.responseObject?.staffId;
+    if (staffId) {
+      // persist the fetched staffId for subsequent reloads
+      setStaffId(staffId);
+    }
+    return staffId;
+  } catch (error) {
+    console.error('Fetch staff from session API Error:', error);
+    throw error;
+  }
+};
 
 // 1. สร้าง Session ใหม่ (POST Body เหมือนเดิม เพราะข้อมูลเยอะไม่ใช่ Params)
 export const createChatSession = async (sessionName: string) => {

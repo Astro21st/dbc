@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, type MouseEvent } from 'react';
-import { createChatSession, fetchSession, renameChatSession, deleteChatSession, fetchChatHistory, sendMessageToAI, submitSatisfaction } from '../../services/chat/chatService';
+import { createChatSession, fetchSession, renameChatSession, deleteChatSession, fetchChatHistory, sendMessageToAI, submitSatisfaction, fetchStaffFromSessionId, setStaffId } from '../../services/chat/chatService';
 import { 
   Database, ShieldCheck, Bot, User, FileText, X, Paperclip, Send, 
   MessageSquare, Edit2, Trash2, Check, Plus, Loader2, ThumbsUp, ThumbsDown
@@ -614,7 +614,34 @@ export default function DBCChat() {
     let mounted = true;
     const loadHistory = async () => {
       try {
-        const data = await fetchSession();
+        // If sessionId present in URL, try to resolve staffId first
+        const params = new URLSearchParams(window.location.search);
+        const sessionParam = params.get('sessionId');
+        let staffIdFromSession: string | number | undefined;
+        if (sessionParam) {
+          try {
+            const fetched = await fetchStaffFromSessionId(sessionParam);
+            if (fetched) {
+              staffIdFromSession = fetched;
+              setStaffId(fetched);
+
+              // Remove sessionId from URL (keep path and other params)
+              try {
+                const cur = new URL(window.location.href);
+                cur.searchParams.delete('sessionId');
+                const newPath = cur.pathname + (cur.search ? `?${cur.searchParams.toString()}` : '');
+                window.history.replaceState({}, document.title, newPath);
+              } catch (urlErr) {
+                // ignore history manipulation errors
+                console.warn('Could not remove sessionId from URL', urlErr);
+              }
+            }
+          } catch (e) {
+            console.warn('Could not fetch staffId from sessionId:', e);
+          }
+        }
+
+        const data = await fetchSession(staffIdFromSession ? String(staffIdFromSession) : undefined);
 
         // Expecting an array or an object containing array
         const rawList = Array.isArray(data) ? data : (data?.sessions || data?.data || []);
